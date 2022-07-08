@@ -1,6 +1,6 @@
+import { Header } from 'components/Header'
 import { NextPage } from 'next'
 import Head from 'next/head'
-import Image from 'next/image'
 import Link from 'next/link'
 
 const Home: NextPage = () => {
@@ -16,22 +16,7 @@ const Home: NextPage = () => {
         <meta name="author" content="r3nanp" />
       </Head>
 
-      <header className="py-4">
-        <h1 className="text-4xl">
-          <Link href="/">
-            <a className="flex items-center justify-center">
-              usePairs(
-              <Image
-                src="/bird.png"
-                alt="Illustration of a bird"
-                width={50}
-                height={50}
-              />
-              )
-            </a>
-          </Link>
-        </h1>
-      </header>
+      <Header />
 
       <ul className="grid grid-cols-1 grid-rows-1 place-items-center md:grid-cols-2">
         <li className="px-1 py-1">
