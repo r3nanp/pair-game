@@ -1,4 +1,4 @@
-import { Game, Header, Layout } from 'components'
+import { Game, Header, Layout, Spinner } from 'components'
 import { Content, Langs } from 'data/langsData'
 import { useResource } from 'lib/useResource'
 import { NextPage } from 'next'
@@ -15,8 +15,8 @@ const Lang: NextPage = () => {
     fetcher(lang)
   )
 
-  if (!data || isLoading) return <p>Loading...</p>
-  if (isError) return <p>Something went wrong</p>
+  if (!data || isLoading) return <Spinner centered size="lg" color="white" />
+  if (isError) return <p>Something went wrong :(</p>
 
   return (
     <Layout>
