@@ -20,7 +20,7 @@ export const SelectionButton = ({
   return (
     <button
       className={clsx(
-        'rounded-full border-2 py-2 px-4 ',
+        'rounded-full border-2 py-2 px-4',
         variants[variant],
         className
       )}

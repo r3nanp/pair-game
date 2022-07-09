@@ -1,0 +1,15 @@
+import { Meta, Story, Canvas } from '@storybook/addon-docs'
+import { SelectionButton, SelectionButtonProps } from '.'
+
+<Meta component={SelectionButton} title="SelectionButton" />
+
+# SelectionButton
+
+It's a simple button, with rounded corners to be more closed to a ideal button.
+This button has three **variants**: `primary`, `reset` and `selected`.
+
+<Canvas>
+  <Story name="SelectedButton" >
+    <SelectionButton variant="selected" label="Selected button" />
+  </Story>
+</Canvas>
