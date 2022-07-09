@@ -1,11 +1,11 @@
-import { Header } from 'components/Header'
+import { Header, Layout } from 'components'
 import { NextPage } from 'next'
 import Head from 'next/head'
 import Link from 'next/link'
 
 const Home: NextPage = () => {
   return (
-    <main className="mx-auto max-w-3xl">
+    <Layout>
       <Head>
         <title>usePairs - This is not a React hook</title>
         <meta
@@ -35,7 +35,7 @@ const Home: NextPage = () => {
           </Link>
         </li>
       </ul>
-    </main>
+    </Layout>
   )
 }
 
