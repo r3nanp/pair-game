@@ -13,7 +13,7 @@ export const Layout: FC<LayoutProps> = ({
   children,
   ...rest
 }) => (
-  <Main className={clsx('mx-auto max-w-3xl', className)} {...rest}>
+  <Main className={clsx('mx-auto max-w-3xl text-white', className)} {...rest}>
     {children}
   </Main>
 )
