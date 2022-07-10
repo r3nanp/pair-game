@@ -2,6 +2,7 @@ import { Game, Header, Layout, Spinner } from 'components'
 import { Content, Langs } from 'data/langsData'
 import { useResource } from 'lib/useResource'
 import { NextPage } from 'next'
+import { DefaultSeo } from 'next-seo'
 import { useRouter } from 'next/router'
 
 const fetcher = async (lang: Langs) =>
@@ -16,10 +17,15 @@ const Lang: NextPage = () => {
   )
 
   if (!data || isLoading) return <Spinner centered size="lg" color="white" />
-  if (isError) return <p>Something went wrong :(</p>
+  if (isError) return <p className="white">Something went wrong :(</p>
 
   return (
     <Layout>
+      <DefaultSeo
+        title={`Pair game - ${lang}`}
+        description={`Learning ${lang}`}
+      />
+
       <Header />
 
       <Game pairs={data.pairs} firstLang={data.langA} secondLang={data.langB} />
