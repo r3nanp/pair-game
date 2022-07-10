@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { SelectionButton } from './SelectionButton'
 
 type Lang = {
   code: string
@@ -17,7 +18,19 @@ type GameProps = {
 }
 
 export const Game = ({ pairs = [], firstLang, secondLang }: GameProps) => {
+  const synthRef = useRef<SpeechSynthesis>(window.speechSynthesis)
   const [choices, setChoices] = useState<Choice[]>([])
+  const [selected, setSelected] = useState(false)
+
+  const choose = useCallback((choice: Choice) => {
+    if (typeof window === 'undefined') return
+
+    const utter = new SpeechSynthesisUtterance(choice.value)
+
+    synthRef.current.speak(utter)
+
+    setSelected(state => !state)
+  }, [])
 
   useEffect(() => {
     const allPairs = pairs.flatMap(([pairA, pairB]) => [
@@ -31,7 +44,7 @@ export const Game = ({ pairs = [], firstLang, secondLang }: GameProps) => {
       }
     ])
 
-    const sortedPairs = allPairs.sort(() => Math.random() * 0.5)
+    const sortedPairs = allPairs.sort(() => Math.random() - 0.5)
 
     setChoices(sortedPairs)
   }, [firstLang.code, pairs, secondLang.code])
@@ -45,7 +58,18 @@ export const Game = ({ pairs = [], firstLang, secondLang }: GameProps) => {
       </div>
 
       <h2 className="mx-4">Choose the pairs</h2>
-      <ul className="mr-2 flex flex-wrap"></ul>
+      <ul className="mr-2 flex flex-wrap">
+        {choices.map(choice => (
+          <li key={`${choice.lang}-${choice.value}`}>
+            <SelectionButton
+              variant={selected ? 'selected' : 'primary'}
+              onClick={() => choose(choice)}
+              className="m-1"
+              label={choice.value}
+            />
+          </li>
+        ))}
+      </ul>
     </>
   )
 }
