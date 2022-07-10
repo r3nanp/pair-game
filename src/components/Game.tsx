@@ -17,20 +17,50 @@ type GameProps = {
   secondLang: Lang
 }
 
+type Match = Record<string, boolean>
+
 export const Game = ({ pairs = [], firstLang, secondLang }: GameProps) => {
   const synthRef = useRef<SpeechSynthesis>(window.speechSynthesis)
+
   const [choices, setChoices] = useState<Choice[]>([])
-  const [selected, setSelected] = useState(false)
+  const [currentChoice, setCurrentChoice] = useState<Choice | null>(null)
+  const [match, setMatch] = useState<Match>({})
 
-  const choose = useCallback((choice: Choice) => {
-    if (typeof window === 'undefined') return
+  const isMatch = useCallback(
+    (firstValue: string, secondValue: string) =>
+      pairs.some(
+        ([firstPair, secondPair]) =>
+          (firstPair === firstValue && secondPair === secondValue) ||
+          (firstPair === secondValue && secondPair === firstValue)
+      ),
+    [pairs]
+  )
 
-    const utter = new SpeechSynthesisUtterance(choice.value)
+  const choose = useCallback(
+    (choice: Choice) => {
+      if (typeof window === 'undefined') return
 
-    synthRef.current.speak(utter)
+      const utter = new SpeechSynthesisUtterance(choice.value)
 
-    setSelected(state => !state)
-  }, [])
+      synthRef.current.speak(utter)
+
+      if (!currentChoice) {
+        setCurrentChoice(choice)
+        setMatch(state => ({ ...state, [choice.value]: true }))
+      }
+
+      if (currentChoice) {
+        if (isMatch(currentChoice.value, choice.value)) {
+          setMatch(state => ({ ...state, [choice.value]: true }))
+        } else {
+          setMatch(state => ({ ...state, [currentChoice.value]: false }))
+        }
+
+        setCurrentChoice(null)
+      }
+    },
+    [currentChoice, isMatch]
+  )
 
   useEffect(() => {
     const allPairs = pairs.flatMap(([pairA, pairB]) => [
@@ -62,7 +92,12 @@ export const Game = ({ pairs = [], firstLang, secondLang }: GameProps) => {
         {choices.map(choice => (
           <li key={`${choice.lang}-${choice.value}`}>
             <SelectionButton
-              variant={selected ? 'selected' : 'primary'}
+              disabled={match[choice.value]}
+              variant={
+                currentChoice && currentChoice.value === choice.value
+                  ? 'selected'
+                  : 'primary'
+              }
               onClick={() => choose(choice)}
               className="m-1"
               label={choice.value}
