@@ -75,6 +75,11 @@ export const Game = ({ pairs = [], firstLang, secondLang }: GameProps) => {
     [currentChoice, firstLang.code, firstLangVoice, isMatch, secondLangVoice]
   )
 
+  const reset = useCallback(() => {
+    setCurrentChoice(null)
+    setMatch({})
+  }, [])
+
   const playVoices = useCallback(() => {
     const voices = synthRef.current
       .getVoices()
@@ -128,7 +133,7 @@ export const Game = ({ pairs = [], firstLang, secondLang }: GameProps) => {
   }, [firstLang.code, pairs, secondLang.code])
 
   return (
-    <>
+    <section>
       <h2 className="mx-4 text-2xl font-bold">Choose your accent</h2>
       <div className="my-2 grid grid-cols-1 space-y-4 lg:grid-cols-2">
         <div>
@@ -189,7 +194,15 @@ export const Game = ({ pairs = [], firstLang, secondLang }: GameProps) => {
             </li>
           ))}
         </ul>
+
+        <SelectionButton
+          className="my-4"
+          disabled={!currentChoice}
+          label="Reset"
+          onClick={reset}
+          variant="reset"
+        />
       </div>
-    </>
+    </section>
   )
 }
