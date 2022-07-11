@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { random } from 'utils/random'
 import { SelectionButton } from './SelectionButton'
 
 type Lang = {
@@ -21,10 +22,21 @@ type Match = Record<string, boolean>
 
 export const Game = ({ pairs = [], firstLang, secondLang }: GameProps) => {
   const synthRef = useRef<SpeechSynthesis>(window.speechSynthesis)
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
+  const [match, setMatch] = useState<Match>({})
   const [choices, setChoices] = useState<Choice[]>([])
   const [currentChoice, setCurrentChoice] = useState<Choice | null>(null)
-  const [match, setMatch] = useState<Match>({})
+  const [firstLangVoices, setFirstLangVoices] = useState<
+    SpeechSynthesisVoice[] | null
+  >(null)
+  const [secondLangVoices, setSecondLangVoices] = useState<
+    SpeechSynthesisVoice[] | null
+  >(null)
+  const [firstLangVoice, setFirstLangVoice] =
+    useState<SpeechSynthesisVoice | null>(null)
+  const [secondLangVoice, setSecondLangVoice] =
+    useState<SpeechSynthesisVoice | null>(null)
 
   const isMatch = useCallback(
     (firstValue: string, secondValue: string) =>
@@ -41,7 +53,8 @@ export const Game = ({ pairs = [], firstLang, secondLang }: GameProps) => {
       if (typeof window === 'undefined') return
 
       const utter = new SpeechSynthesisUtterance(choice.value)
-
+      utter.voice =
+        choice.lang === firstLang.code ? firstLangVoice : secondLangVoice
       synthRef.current.speak(utter)
 
       if (!currentChoice) {
@@ -59,8 +72,43 @@ export const Game = ({ pairs = [], firstLang, secondLang }: GameProps) => {
         setCurrentChoice(null)
       }
     },
-    [currentChoice, isMatch]
+    [currentChoice, firstLang.code, firstLangVoice, isMatch, secondLangVoice]
   )
+
+  const playVoices = useCallback(() => {
+    const voices = synthRef.current
+      .getVoices()
+      .filter(voice => !voice.name.includes('Google'))
+
+    /* Get the first two values of the languages
+     * like 'pt' instead of 'pt-BR'
+     */
+    const voicesA = voices.filter(
+      voice => voice.lang.substring(0, 2) === firstLang.code
+    )
+
+    setFirstLangVoices(voicesA)
+    setFirstLangVoice(random(voicesA))
+
+    const voicesB = voices.filter(
+      voice => voice.lang.substring(0, 2) === secondLang.code
+    )
+
+    setSecondLangVoices(voicesB)
+    setSecondLangVoice(random(voicesB))
+  }, [firstLang.code, secondLang.code])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    timeoutRef.current = setTimeout(() => playVoices(), 100)
+
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
+    }
+  }, [playVoices])
 
   useEffect(() => {
     const allPairs = pairs.flatMap(([pairA, pairB]) => [
@@ -81,30 +129,67 @@ export const Game = ({ pairs = [], firstLang, secondLang }: GameProps) => {
 
   return (
     <>
-      <h2 className="mx-4">Choose your accent</h2>
-      <div className="flex">
-        <ul className="flex flex-wrap p-2"></ul>
-        <ul className="flex flex-wrap p-2"></ul>
+      <h2 className="mx-4 text-2xl font-bold">Choose your accent</h2>
+      <div className="my-2 grid grid-cols-1 space-y-4 lg:grid-cols-2">
+        <div>
+          <h3 className="mx-4 text-xl">{firstLang.name}</h3>
+          <ul className="flex flex-wrap p-2">
+            {firstLangVoices?.map(voice => (
+              <li key={`voice-${voice.name}-${voice.lang}`}>
+                <SelectionButton
+                  variant={
+                    firstLangVoice?.name === voice.name ? 'selected' : 'primary'
+                  }
+                  onClick={() => setFirstLangVoice(voice)}
+                  className="m-1"
+                  label={voice.name}
+                />
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div>
+          <h3 className="mx-4 text-xl">{secondLang.name}</h3>
+          <ul className="flex flex-wrap p-2">
+            {secondLangVoices?.map(voice => (
+              <li key={`voice-${voice.name}-${voice.lang}`}>
+                <SelectionButton
+                  variant={
+                    secondLangVoice?.name === voice.name
+                      ? 'selected'
+                      : 'primary'
+                  }
+                  onClick={() => setSecondLangVoice(voice)}
+                  className="m-1"
+                  label={voice.name}
+                />
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
 
-      <h2 className="mx-4">Choose the pairs</h2>
-      <ul className="mr-2 flex flex-wrap">
-        {choices.map(choice => (
-          <li key={`${choice.lang}-${choice.value}`}>
-            <SelectionButton
-              disabled={match[choice.value]}
-              variant={
-                currentChoice && currentChoice.value === choice.value
-                  ? 'selected'
-                  : 'primary'
-              }
-              onClick={() => choose(choice)}
-              className="m-1"
-              label={choice.value}
-            />
-          </li>
-        ))}
-      </ul>
+      <div className="py-14 lg:py-24">
+        <h2 className="mx-4 text-2xl font-bold">Choose the pairs</h2>
+        <ul className="mr-2 flex flex-wrap">
+          {choices.map(choice => (
+            <li key={`${choice.lang}-${choice.value}`}>
+              <SelectionButton
+                disabled={match[choice.value]}
+                variant={
+                  currentChoice && currentChoice.value === choice.value
+                    ? 'selected'
+                    : 'primary'
+                }
+                onClick={() => choose(choice)}
+                className="m-1"
+                label={choice.value}
+              />
+            </li>
+          ))}
+        </ul>
+      </div>
     </>
   )
 }
