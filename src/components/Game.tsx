@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useReward } from 'react-rewards'
 import { random } from 'utils/random'
 import { SelectionButton } from './SelectionButton'
 
@@ -21,10 +22,13 @@ type GameProps = {
 type Match = Record<string, boolean>
 
 export const Game = ({ pairs = [], firstLang, secondLang }: GameProps) => {
+  const { reward } = useReward('confettiId', 'confetti')
+
   const synthRef = useRef<SpeechSynthesis>(window.speechSynthesis)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const playRef = useRef<HTMLAudioElement | null>(null)
 
-  const [match, setMatch] = useState<Match>({})
+  const [match, setMatch] = useState<Match | null>(null)
   const [choices, setChoices] = useState<Choice[]>([])
   const [currentChoice, setCurrentChoice] = useState<Choice | null>(null)
   const [firstLangVoices, setFirstLangVoices] = useState<
@@ -106,14 +110,30 @@ export const Game = ({ pairs = [], firstLang, secondLang }: GameProps) => {
   useEffect(() => {
     if (typeof window === 'undefined') return
 
-    timeoutRef.current = setTimeout(() => playVoices(), 100)
+    timeoutRef.current = setTimeout(() => playVoices(), 50)
+
+    playRef.current = new Audio('/reward.mp3')
+
+    if (match) {
+      //Just to the length of the object
+      const matchingValues = Object.entries(match)
+
+      if (choices.length === matchingValues.length) {
+        playRef.current.play()
+        reward()
+      }
+    }
 
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current)
       }
     }
-  }, [playVoices])
+  }, [choices.length, match, playVoices, reward])
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !match) return
+  }, [choices.length, match, reward])
 
   useEffect(() => {
     const allPairs = pairs.flatMap(([pairA, pairB]) => [
@@ -135,7 +155,10 @@ export const Game = ({ pairs = [], firstLang, secondLang }: GameProps) => {
   return (
     <section>
       <h2 className="mx-4 text-2xl font-bold">Choose your accent</h2>
-      <div className="my-2 grid grid-cols-1 space-y-4 lg:grid-cols-2">
+      <div
+        id="confettiId"
+        className="my-2 grid grid-cols-1 space-y-4 lg:grid-cols-2"
+      >
         <div>
           <h3 className="mx-4 text-xl">{firstLang.name}</h3>
           <ul className="flex flex-wrap p-2">
@@ -181,7 +204,7 @@ export const Game = ({ pairs = [], firstLang, secondLang }: GameProps) => {
           {choices.map(choice => (
             <li key={`${choice.lang}-${choice.value}`}>
               <SelectionButton
-                disabled={match[choice.value]}
+                disabled={match?.[choice.value]}
                 variant={
                   currentChoice && currentChoice.value === choice.value
                     ? 'selected'
