@@ -132,10 +132,6 @@ export const Game = ({ pairs = [], firstLang, secondLang }: GameProps) => {
   }, [choices.length, match, playVoices, reward])
 
   useEffect(() => {
-    if (typeof window === 'undefined' || !match) return
-  }, [choices.length, match, reward])
-
-  useEffect(() => {
     const allPairs = pairs.flatMap(([pairA, pairB]) => [
       {
         lang: firstLang.code,
